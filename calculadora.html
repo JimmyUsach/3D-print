@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Calculadora profesional de precios para impresión 3D. Calcula costos de filamento, energía, desgaste y mano de obra.">
+    <meta name="theme-color" content="#0c2340">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Calc 3D">
+    
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%230891b2' width='192' height='192'/><text x='50%' y='50%' font-size='100' font-weight='bold' fill='white' text-anchor='middle' dominant-baseline='central'>3D</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%230891b2' width='180' height='180'/><text x='50%' y='50%' font-size='90' font-weight='bold' fill='white' text-anchor='middle' dominant-baseline='central'>3D</text></svg>">
+    
+    <title>Calculadora de Precios - Impresión 3D</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes pulse-install {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .pulse-install {
+            animation: pulse-install 2s infinite;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-4 md:p-8">
+    <div class="max-w-4xl mx-auto">
+        <!-- Botón de instalación (solo aparece en navegadores compatibles) -->
+        <div id="installPrompt" class="mb-4 bg-cyan-600 rounded-lg p-4 flex justify-between items-center hidden">
+            <div>
+                <h3 class="font-bold text-white">Instalar Calculadora 3D</h3>
+                <p class="text-sm text-cyan-100">Accede a la app desde tu pantalla de inicio</p>
+            </div>
+            <div class="flex gap-2">
+                <button id="installBtn" class="bg-white text-cyan-600 px-4 py-2 rounded font-semibold hover:bg-cyan-50 pulse-install">
+                    Instalar
+                </button>
+                <button id="dismissBtn" class="bg-cyan-700 text-white px-4 py-2 rounded hover:bg-cyan-800">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-slate-800 rounded-xl shadow-2xl p-6 md:p-8 border border-slate-700">
+            <h1 class="text-2xl md:text-3xl font-bold text-cyan-400 mb-6 text-center">Calculadora de Precios de Impresión 3D</h1>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Columna de Entradas -->
+                <div class="space-y-4">
+                    <h2 class="text-xl font-semibold text-cyan-300 border-b border-slate-700 pb-2">Parámetros de Costo</h2>
+
+                    <!-- Filamento -->
+                    <div class="bg-slate-900/50 p-4 rounded-lg border border-slate-700 space-y-3">
+                        <h3 class="font-medium text-cyan-200">1. Filamento / Material</h3>
+                        <div>
+                            <label class="block text-sm text-slate-400 mb-1">Tipo de Material</label>
+                            <select id="tipoMaterial" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white">
+                                <option value="PLA">PLA</option>
+                                <option value="PETG">PETG</option>
+                                <option value="ABS">ABS</option>
+                                <option value="TPU">TPU (Flex)</option>
+                                <option value="Resina">Resina</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">Precio Bobina ($)</label>
+                                <input type="number" id="precioBobina" value="15000" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">Peso Bobina (g)</label>
+                                <input type="number" id="pesoBobina" value="1000" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm text-slate-400 mb-1">Peso de la Pieza (g)</label>
+                            <input type="number" id="pesoPieza" value="50" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white">
+                        </div>
+                    </div>
+
+                    <!-- Energía y Tiempos -->
+                    <div class="bg-slate-900/50 p-4 rounded-lg border border-slate-700 space-y-3">
+                        <h3 class="font-medium text-cyan-200">2. Energía y Tiempos</h3>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">Tiempo (Horas)</label>
+                                <input type="number" id="tiempoImpresion" value="5" step="0.1" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">Potencia Impresora (W)</label>
+                                <input type="number" id="potenciaImpresora" value="150" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm text-slate-400 mb-1">Valor kWh ($)</label>
+                            <input type="number" id="valorKwh" value="150" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white">
+                        </div>
+                    </div>
+
+                    <!-- Desgaste y Extras -->
+                    <div class="bg-slate-900/50 p-4 rounded-lg border border-slate-700 space-y-3">
+                        <h3 class="font-medium text-cyan-200">3. Desgaste y Extras</h3>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">Desgaste Impresora /hr ($)</label>
+                                <input type="number" id="desgasteHora" value="100" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">Costos Extra / Packaging ($)</label>
+                                <input type="number" id="costosExtras" value="500" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mano de Obra -->
+                    <div class="bg-slate-900/50 p-4 rounded-lg border border-slate-700 space-y-3">
+                        <h3 class="font-medium text-cyan-200">4. Mano de Obra y Márgenes</h3>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">Tiempo de Trabajo (hrs)</label>
+                                <input type="number" id="tiempoTrabajo" value="0.5" step="0.1" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">Valor Hora de Trabajo ($)</label>
+                                <input type="number" id="valorHoraTrabajo" value="4000" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm text-slate-400 mb-1">Tipo de Tarifa / Margen</label>
+                            <select id="tipoMargen" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white">
+                                <option value="1.1">Familia (+10%)</option>
+                                <option value="1.25">Amigos (+25%)</option>
+                                <option value="1.5" selected>Minorista / Público (+50%)</option>
+                                <option value="1.35">Mayorista (+35%)</option>
+                                <option value="1.6">Encargo Especial (+60%)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Columna de Resultados -->
+                <div class="space-y-6 flex flex-col justify-between">
+                    <div class="bg-slate-900 p-6 rounded-xl border border-slate-700 space-y-4">
+                        <h2 class="text-xl font-semibold text-cyan-300 border-b border-slate-700 pb-2">Desglose de Costos</h2>
+                        
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-400">Costo Filamento:</span>
+                            <span id="resFilamento" class="font-semibold text-white">$0</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-400">Costo Energía:</span>
+                            <span id="resEnergia" class="font-semibold text-white">$0</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-400">Desgaste de Impresora:</span>
+                            <span id="resDesgaste" class="font-semibold text-white">$0</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-400">Extras / Embalaje:</span>
+                            <span id="resExtras" class="font-semibold text-white">$0</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-400">Mano de Obra:</span>
+                            <span id="resManoObra" class="font-semibold text-white">$0</span>
+                        </div>
+
+                        <div class="border-t border-slate-700 pt-3 flex justify-between font-bold">
+                            <span class="text-slate-300">Costo Base Total:</span>
+                            <span id="resCostoBase" class="text-cyan-300">$0</span>
+                        </div>
+                    </div>
+
+                    <!-- Precio Final Destacado -->
+                    <div class="bg-gradient-to-br from-cyan-600 to-blue-700 p-6 rounded-xl shadow-lg text-center space-y-2">
+                        <span class="text-cyan-100 uppercase tracking-wider text-sm font-semibold">Precio Final Sugerido</span>
+                        <div id="resPrecioFinal" class="text-4xl font-extrabold text-white">$0</div>
+                        <p id="resGananciaNeta" class="text-xs text-cyan-100">Ganancia estimada: $0</p>
+                    </div>
+
+                    <!-- Botones de utilidad -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <button id="resetBtn" class="bg-slate-700 hover:bg-slate-600 text-white font-semibold py-2 px-4 rounded transition">
+                            Reiniciar
+                        </button>
+                        <button id="shareBtn" class="bg-cyan-600 hover:bg-cyan-500 text-white font-semibold py-2 px-4 rounded transition">
+                            Compartir
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Registrar Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(err => console.log('SW registration failed'));
+        }
+
+        // Install Prompt Logic
+        let deferredPrompt;
+        const installPrompt = document.getElementById('installPrompt');
+        const installBtn = document.getElementById('installBtn');
+        const dismissBtn = document.getElementById('dismissBtn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installPrompt.classList.remove('hidden');
+        });
+
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User response to the install prompt: ${outcome}`);
+                deferredPrompt = null;
+                installPrompt.classList.add('hidden');
+            }
+        });
+
+        dismissBtn.addEventListener('click', () => {
+            installPrompt.classList.add('hidden');
+        });
+
+        // Lógica de cálculo
+        function calcular() {
+            const precioBobina = parseFloat(document.getElementById('precioBobina').value) || 0;
+            const pesoBobina = parseFloat(document.getElementById('pesoBobina').value) || 1;
+            const pesoPieza = parseFloat(document.getElementById('pesoPieza').value) || 0;
+            const costoFilamento = (precioBobina / pesoBobina) * pesoPieza;
+
+            const tiempoImpresion = parseFloat(document.getElementById('tiempoImpresion').value) || 0;
+            const potenciaImpresora = parseFloat(document.getElementById('potenciaImpresora').value) || 0;
+            const valorKwh = parseFloat(document.getElementById('valorKwh').value) || 0;
+            const costoEnergia = (potenciaImpresora / 1000) * tiempoImpresion * valorKwh;
+
+            const desgasteHora = parseFloat(document.getElementById('desgasteHora').value) || 0;
+            const costoDesgaste = desgasteHora * tiempoImpresion;
+            const costosExtras = parseFloat(document.getElementById('costosExtras').value) || 0;
+
+            const tiempoTrabajo = parseFloat(document.getElementById('tiempoTrabajo').value) || 0;
+            const valorHoraTrabajo = parseFloat(document.getElementById('valorHoraTrabajo').value) || 0;
+            const costoManoObra = tiempoTrabajo * valorHoraTrabajo;
+
+            const costoBase = costoFilamento + costoEnergia + costoDesgaste + costosExtras + costoManoObra;
+
+            const multiplicador = parseFloat(document.getElementById('tipoMargen').value) || 1;
+            const precioFinal = costoBase * multiplicador;
+            const gananciaNeta = precioFinal - costoBase;
+
+            const formatoCLP = (num) => Math.round(num).toLocaleString('es-CL', { style: 'currency', currency: 'CLP' });
+
+            document.getElementById('resFilamento').innerText = formatoCLP(costoFilamento);
+            document.getElementById('resEnergia').innerText = formatoCLP(costoEnergia);
+            document.getElementById('resDesgaste').innerText = formatoCLP(costoDesgaste);
+            document.getElementById('resExtras').innerText = formatoCLP(costosExtras);
+            document.getElementById('resManoObra').innerText = formatoCLP(costoManoObra);
+            document.getElementById('resCostoBase').innerText = formatoCLP(costoBase);
+            document.getElementById('resPrecioFinal').innerText = formatoCLP(precioFinal);
+            document.getElementById('resGananciaNeta').innerText = `Ganancia estimada: ${formatoCLP(gananciaNeta)}`;
+
+            // Guardar en localStorage
+            const datos = {
+                precioBobina, pesoBobina, pesoPieza,
+                tiempoImpresion, potenciaImpresora, valorKwh,
+                desgasteHora, costosExtras, tiempoTrabajo, valorHoraTrabajo,
+                tipoMargen: document.getElementById('tipoMargen').value,
+                tipoMaterial: document.getElementById('tipoMaterial').value
+            };
+            localStorage.setItem('calculadora3d', JSON.stringify(datos));
+        }
+
+        // Cargar datos guardados
+        function cargarDatos() {
+            const datos = localStorage.getItem('calculadora3d');
+            if (datos) {
+                const obj = JSON.parse(datos);
+                Object.keys(obj).forEach(key => {
+                    const elem = document.getElementById(key);
+                    if (elem) elem.value = obj[key];
+                });
+            }
+        }
+
+        // Reiniciar
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            localStorage.removeItem('calculadora3d');
+            document.querySelectorAll('input, select').forEach(el => {
+                if (el.id === 'precioBobina') el.value = '15000';
+                else if (el.id === 'pesoBobina') el.value = '1000';
+                else if (el.id === 'pesoPieza') el.value = '50';
+                else if (el.id === 'tiempoImpresion') el.value = '5';
+                else if (el.id === 'potenciaImpresora') el.value = '150';
+                else if (el.id === 'valorKwh') el.value = '150';
+                else if (el.id === 'desgasteHora') el.value = '100';
+                else if (el.id === 'costosExtras') el.value = '500';
+                else if (el.id === 'tiempoTrabajo') el.value = '0.5';
+                else if (el.id === 'valorHoraTrabajo') el.value = '4000';
+                else if (el.id === 'tipoMargen') el.value = '1.5';
+            });
+            calcular();
+        });
+
+        // Compartir
+        document.getElementById('shareBtn').addEventListener('click', async () => {
+            const precioFinal = document.getElementById('resPrecioFinal').innerText;
+            const costoBase = document.getElementById('resCostoBase').innerText;
+            
+            const texto = `Calculadora 3D\nPrecio Final: ${precioFinal}\nCosto Base: ${costoBase}`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Calculadora de Precios 3D',
+                    text: texto,
+                    url: window.location.href
+                });
+            } else {
+                alert(texto);
+            }
+        });
+
+        // Listeners
+        document.querySelectorAll('input, select').forEach(element => {
+            element.addEventListener('input', calcular);
+            element.addEventListener('change', calcular);
+        });
+
+        // Inicial
+        cargarDatos();
+        calcular();
+    </script>
+</body>
+</html>
